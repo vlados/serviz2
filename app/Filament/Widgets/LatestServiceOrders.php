@@ -24,40 +24,53 @@ class LatestServiceOrders extends BaseWidget
                     ->limit(5)
             )
             ->columns([
-                Tables\Columns\TextColumn::make('order_number')
-                    ->label('Номер')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('customer.name')
-                    ->label('Клиент')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('scooter.model')
-                    ->label('Тротинетка')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('received_at')
-                    ->label('Получена на')
-                    ->date()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('status')
-                    ->label('Статус')
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'pending' => 'В очакване',
-                        'in_progress' => 'В процес',
-                        'completed' => 'Завършена',
-                        'cancelled' => 'Отказана',
-                        default => $state,
-                    })
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'pending' => 'gray',
-                        'in_progress' => 'warning',
-                        'completed' => 'success',
-                        'cancelled' => 'danger',
-                        default => 'gray',
-                    }),
-                Tables\Columns\TextColumn::make('price')
-                    ->label('Цена')
-                    ->money('BGN')
-                    ->sortable(),
-            ]);
+return $table
+    ->query(
+        ServiceOrder::query()
+            ->latest('received_at')
+            ->limit(5)
+    )
+    ->columns([
+        Tables\Columns\TextColumn::make('order_number')
+            ->label('Номер')
+            ->searchable(),
+        Tables\Columns\TextColumn::make('customer.name')
+            ->label('Клиент')
+            ->searchable(),
+        Tables\Columns\TextColumn::make('scooter.model')
+            ->label('Тротинетка')
+            ->searchable(),
+        Tables\Columns\TextColumn::make('received_at')
+            ->label('Получена на')
+            ->date()
+            ->sortable(),
+        Tables\Columns\TextColumn::make('status')
+            ->label('Статус')
+            ->formatStateUsing(fn (string $state): string => match ($state) {
+                'pending' => 'В очакване',
+                'in_progress' => 'В процес',
+                'completed' => 'Завършена',
+                'cancelled' => 'Отказана',
+                default => $state,
+            })
+            ->badge()
+            ->color(fn (string $state): string => match ($state) {
+                'pending' => 'gray',
+                'in_progress' => 'warning',
+                'completed' => 'success',
+                'cancelled' => 'danger',
+                default => 'gray',
+            }),
+        Tables\Columns\TextColumn::make('price')
+            ->label('Цена')
+            ->money('BGN')
+            ->sortable(),
+    ])
+    ->actions([
+        Tables\Actions\Action::make('view')
+            ->label('View Details')
+            ->url(fn (ServiceOrder $record): string => route('filament.admin.resources.service-orders.view', $record))
+            ->icon('heroicon-o-eye'),
+    ]);
     }
 }

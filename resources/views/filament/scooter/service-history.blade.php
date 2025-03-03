@@ -33,8 +33,9 @@
                                 {{ $order->order_number }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ $order->received_at->format('d.m.Y') }}
-                            </td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+    {{ $order->received_at ? $order->received_at->format('d.m.Y') : 'N/A' }}
+</td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                                     @if($order->status === 'pending') bg-gray-100 text-gray-800
