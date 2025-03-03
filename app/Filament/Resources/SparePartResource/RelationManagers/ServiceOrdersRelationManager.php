@@ -71,11 +71,20 @@ class ServiceOrdersRelationManager extends RelationManager
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make()
-                    ->using(function ($record, array $data) {
-                        $record->pivot->update($data);
-                        return $record;
-                    }),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\EditAction::make()
+                        ->label('Редактиране')
+                        ->icon('heroicon-o-pencil')
+                        ->using(function ($record, array $data) {
+                            $record->pivot->update($data);
+                            return $record;
+                        })
+                ])
+                ->tooltip('Действия')
+                ->button()
+                ->color('gray')
+                ->label('Действия')
+                ->size('xs'),
             ])
             ->bulkActions([
                 //

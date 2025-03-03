@@ -105,8 +105,20 @@ class ServiceOrdersRelationManager extends RelationManager
                 Tables\Actions\CreateAction::make(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\EditAction::make()
+                        ->label('Редактиране')
+                        ->icon('heroicon-o-pencil'),
+                        
+                    Tables\Actions\DeleteAction::make()
+                        ->label('Изтриване')
+                        ->icon('heroicon-o-trash'),
+                ])
+                ->tooltip('Действия')
+                ->button()
+                ->color('gray')
+                ->label('Действия')
+                ->size('xs'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

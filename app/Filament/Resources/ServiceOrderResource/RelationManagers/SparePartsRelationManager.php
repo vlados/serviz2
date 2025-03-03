@@ -73,12 +73,23 @@ class SparePartsRelationManager extends RelationManager
                     ->preloadRecordSelect(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make()
-                    ->using(function ($record, array $data): SparePart {
-                        $record->pivot->update($data);
-                        return $record;
-                    }),
-                Tables\Actions\DetachAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\EditAction::make()
+                        ->label('Редактиране')
+                        ->icon('heroicon-o-pencil')
+                        ->using(function ($record, array $data): SparePart {
+                            $record->pivot->update($data);
+                            return $record;
+                        }),
+                    Tables\Actions\DetachAction::make()
+                        ->label('Премахване')
+                        ->icon('heroicon-o-x-mark'),
+                ])
+                ->tooltip('Действия')
+                ->button()
+                ->color('gray')
+                ->label('Действия')
+                ->size('xs'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

@@ -197,10 +197,11 @@ class CustomerResource extends Resource
                             ])
                         ),
                 ])
-                ->label('Действия')
-                ->icon('heroicon-o-ellipsis-vertical')
                 ->tooltip('Действия')
-                ->iconButton(),
+                ->button()
+                ->color('gray')
+                ->label('Действия')
+                ->size('xs'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

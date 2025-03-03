@@ -9,8 +9,12 @@ use Filament\Forms;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Filters\Indicator;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -164,6 +168,7 @@ class ServiceOrderResource extends Resource
                                                     ->options([
                                                         'pending' => 'В очакване',
                                                         'in_progress' => 'В процес',
+                                                        'waiting_payment' => 'Чака плащане',
                                                         'completed' => 'Завършена',
                                                         'cancelled' => 'Отказана',
                                                     ])
@@ -220,7 +225,21 @@ class ServiceOrderResource extends Resource
                                                     ->numeric()
                                                     ->prefix('лв')
                                                     ->default(0)
-                                                    ->suffixIcon('heroicon-o-currency-euro'),
+                                                    ->suffixIcon('heroicon-o-currency-euro')
+                                                    ->live()
+                                                    ->afterStateUpdated(function (Get $get, Set $set) {
+                                                        $price = (float) ($get('price') ?? 0);
+                                                        $amountPaid = (float) ($get('amount_paid') ?? 0);
+                                                        
+                                                        // Update payment status based on the updated price
+                                                        if ($amountPaid <= 0) {
+                                                            $set('payment_status', 'unpaid');
+                                                        } elseif ($amountPaid >= $price) {
+                                                            $set('payment_status', 'paid');
+                                                        } else {
+                                                            $set('payment_status', 'partially_paid');
+                                                        }
+                                                    }),
                                                 
                                                 Forms\Components\Select::make('assigned_to')
                                                     ->label('Възложено на техник')
@@ -230,6 +249,116 @@ class ServiceOrderResource extends Resource
                                             ]),
                                     ]),
                             ]),
+                        
+                        Forms\Components\Tabs\Tab::make('Плащане')
+                            ->icon('heroicon-o-banknotes')
+                            ->schema([
+                                Forms\Components\Section::make('Информация за плащането')
+                                    ->description('Управление на плащанията за тази сервизна поръчка')
+                                    ->aside()
+                                    ->schema([
+                                        Forms\Components\Select::make('payment_status')
+                                            ->label('Статус на плащане')
+                                            ->options([
+                                                'unpaid' => 'Неплатено',
+                                                'partially_paid' => 'Частично платено',
+                                                'paid' => 'Платено изцяло',
+                                            ])
+                                            ->required()
+                                            ->default('unpaid')
+                                            ->live()
+                                            ->suffixIcon('heroicon-o-clipboard-document-check')
+                                            ->afterStateUpdated(function (Get $get, Set $set, string $state) {
+                                                $price = (float) ($get('price') ?? 0);
+                                                
+                                                if ($state === 'paid') {
+                                                    $set('amount_paid', $price);
+                                                    if (!$get('payment_date')) {
+                                                        $set('payment_date', now());
+                                                    }
+                                                } elseif ($state === 'unpaid') {
+                                                    $set('amount_paid', 0);
+                                                }
+                                            }),
+                                        
+                                        Forms\Components\Grid::make(2)
+                                            ->schema([
+                                                Forms\Components\TextInput::make('amount_paid')
+                                                    ->label('Платена сума')
+                                                    ->numeric()
+                                                    ->prefix('лв')
+                                                    ->default(0)
+                                                    ->suffixIcon('heroicon-o-currency-euro')
+                                                    ->live()
+                                                    ->afterStateUpdated(function (Get $get, Set $set, $state) {
+                                                        $price = (float) ($get('price') ?? 0);
+                                                        $amountPaid = (float) ($state ?? 0);
+                                                        
+                                                        if ($amountPaid <= 0) {
+                                                            $set('payment_status', 'unpaid');
+                                                        } elseif ($amountPaid >= $price) {
+                                                            $set('payment_status', 'paid');
+                                                        } else {
+                                                            $set('payment_status', 'partially_paid');
+                                                        }
+                                                        
+                                                        if ($amountPaid > 0 && !$get('payment_date')) {
+                                                            $set('payment_date', now());
+                                                        }
+                                                    }),
+                                                
+                                                Forms\Components\Placeholder::make('remaining_amount')
+                                                    ->label('Остатък за плащане')
+                                                    ->content(function (Get $get) {
+                                                        $price = (float) ($get('price') ?? 0);
+                                                        $amountPaid = (float) ($get('amount_paid') ?? 0);
+                                                        $remainingAmount = max(0, $price - $amountPaid);
+                                                        
+                                                        return number_format($remainingAmount, 2) . ' лв.';
+                                                    }),
+                                            ]),
+                                        
+                                        Forms\Components\Grid::make(2)
+                                            ->schema([
+                                                Forms\Components\Select::make('payment_method')
+                                                    ->label('Начин на плащане')
+                                                    ->options([
+                                                        'cash' => 'В брой',
+                                                        'card' => 'Карта',
+                                                        'bank_transfer' => 'Банков превод',
+                                                        'other' => 'Друго',
+                                                    ])
+                                                    ->visible(fn (Get $get) => $get('payment_status') && $get('payment_status') !== 'unpaid'),
+                                                
+                                                Forms\Components\DatePicker::make('payment_date')
+                                                    ->label('Дата на плащане')
+                                                    ->visible(fn (Get $get) => $get('payment_status') && $get('payment_status') !== 'unpaid'),
+                                            ]),
+                                        
+                                        Forms\Components\Textarea::make('payment_notes')
+                                            ->label('Бележки за плащането')
+                                            ->rows(3)
+                                            ->columnSpanFull(),
+                                        
+                                        Forms\Components\Actions::make([
+                                            Forms\Components\Actions\Action::make('recordFullPayment')
+                                                ->label('Плащане в пълен размер')
+                                                ->icon('heroicon-o-banknotes')
+                                                ->color('success')
+                                                ->action(function (Get $get, Set $set) {
+                                                    $set('payment_status', 'paid');
+                                                    $set('amount_paid', $get('price'));
+                                                    $set('payment_date', now());
+                                                })
+                                                ->visible(fn (Get $get): bool => 
+                                                    $get('payment_status') !== null && 
+                                                    $get('payment_status') !== 'paid' && 
+                                                    (float) ($get('price') ?? 0) > 0
+                                                ),
+                                        ]),
+                                    ]),
+                            ])
+                            ->visible(fn (Get $get): bool => $get('status') !== 'cancelled'),
                     ])->columnSpanFull(),
             ]);
     }
@@ -251,6 +380,7 @@ class ServiceOrderResource extends Resource
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'pending' => 'В очакване',
                         'in_progress' => 'В процес',
+                        'waiting_payment' => 'Чака плащане',
                         'completed' => 'Завършена',
                         'cancelled' => 'Отказана',
                         default => $state,
@@ -258,6 +388,7 @@ class ServiceOrderResource extends Resource
                     ->icon(fn (string $state): string => match ($state) {
                         'pending' => 'heroicon-o-clock',
                         'in_progress' => 'heroicon-o-play',
+                        'waiting_payment' => 'heroicon-o-banknotes',
                         'completed' => 'heroicon-o-check-circle', 
                         'cancelled' => 'heroicon-o-x-circle',
                         default => 'heroicon-o-question-mark-circle',
@@ -266,6 +397,7 @@ class ServiceOrderResource extends Resource
                     ->color(fn (string $state): string => match ($state) {
                         'pending' => 'gray',
                         'in_progress' => 'warning',
+                        'waiting_payment' => 'info',
                         'completed' => 'success',
                         'cancelled' => 'danger',
                         default => 'gray',
@@ -303,6 +435,36 @@ class ServiceOrderResource extends Resource
                     ->sortable()
                     ->icon('heroicon-o-currency-euro'),
                 
+                Tables\Columns\TextColumn::make('payment_status')
+                    ->label('Плащане')
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'unpaid' => 'Неплатено',
+                        'partially_paid' => 'Частично',
+                        'paid' => 'Платено',
+                        default => $state,
+                    })
+                    ->icon(fn (string $state): string => match ($state) {
+                        'unpaid' => 'heroicon-o-x-circle',
+                        'partially_paid' => 'heroicon-o-exclamation-triangle',
+                        'paid' => 'heroicon-o-check-circle',
+                        default => 'heroicon-o-question-mark-circle',
+                    })
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'unpaid' => 'danger',
+                        'partially_paid' => 'warning',
+                        'paid' => 'success',
+                        default => 'gray',
+                    }),
+                
+                Tables\Columns\TextColumn::make('amount_paid')
+                    ->label('Платено')
+                    ->money('BGN')
+                    ->sortable()
+                    ->toggleable()
+                    ->visible(fn ($record) => $record && $record->payment_status !== 'unpaid')
+                    ->icon('heroicon-o-banknotes'),
+                
                 Tables\Columns\TextColumn::make('technician.name')
                     ->label('Техник')
                     ->toggleable()
@@ -329,6 +491,7 @@ class ServiceOrderResource extends Resource
                     ->options([
                         'pending' => 'В очакване',
                         'in_progress' => 'В процес',
+                        'waiting_payment' => 'Чака плащане',
                         'completed' => 'Завършена',
                         'cancelled' => 'Отказана',
                     ]),
@@ -374,8 +537,36 @@ class ServiceOrderResource extends Resource
                     ->relationship('technician', 'name')
                     ->searchable()
                     ->preload(),
-            ])
+                    
+                Tables\Filters\SelectFilter::make('payment_status')
+                    ->label('Статус на плащане')
+                    ->options([
+                        'unpaid' => 'Неплатено',
+                        'partially_paid' => 'Частично платено',
+                        'paid' => 'Платено изцяло',
+                    ]),
+                    
+                Tables\Filters\SelectFilter::make('payment_method')
+                    ->label('Начин на плащане')
+                    ->options([
+                        'cash' => 'В брой',
+                        'card' => 'Карта',
+                        'bank_transfer' => 'Банков превод',
+                        'other' => 'Друго',
+                    ]),
+                ], layout: FiltersLayout::AboveContent)
             ->filtersFormColumns(3)
+            ->filtersTriggerAction(
+                fn (Tables\Actions\Action $action) => $action
+                    ->button()
+                    ->label('Филтри')
+            )
+            ->persistFiltersInSession()
+            ->filtersApplyAction(
+                fn (Tables\Actions\Action $action) => $action
+                    ->button()
+                    ->label('Приложи филтрите')
+            )
             ->actions([
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\ViewAction::make()
@@ -393,11 +584,31 @@ class ServiceOrderResource extends Resource
                         ->url(fn (ServiceOrder $record): string => route('service-orders.print-label', $record))
                         ->openUrlInNewTab(),
                     
+                    Tables\Actions\Action::make('markWaitingPayment')
+                        ->label('Готова - чака плащане')
+                        ->icon('heroicon-o-banknotes')
+                        ->color('info')
+                        ->visible(fn (ServiceOrder $record): bool => 
+                            $record->status === 'in_progress'
+                        )
+                        ->action(function (ServiceOrder $record): void {
+                            $record->update([
+                                'status' => 'waiting_payment',
+                            ]);
+                        })
+                        ->requiresConfirmation()
+                        ->modalHeading('Готова за плащане')
+                        ->modalDescription('Сигурни ли сте, че искате да маркирате тази поръчка като готова за плащане?')
+                        ->modalSubmitActionLabel('Да, чака плащане'),
+                        
                     Tables\Actions\Action::make('complete')
-                        ->label('Маркирай като завършена')
+                        ->label('Завърши поръчката')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->visible(fn (ServiceOrder $record): bool => $record->status !== 'completed')
+                        ->visible(fn (ServiceOrder $record): bool => 
+                            $record->status === 'waiting_payment' && 
+                            $record->payment_status === 'paid'
+                        )
                         ->action(function (ServiceOrder $record): void {
                             $record->update([
                                 'status' => 'completed',
@@ -405,9 +616,50 @@ class ServiceOrderResource extends Resource
                             ]);
                         })
                         ->requiresConfirmation()
-                        ->modalHeading('Маркирай като завършена')
-                        ->modalDescription('Сигурни ли сте, че искате да маркирате тази поръчка като завършена?')
+                        ->modalHeading('Завърши поръчката')
+                        ->modalDescription('Сигурни ли сте, че искате да маркирате тази поръчка като напълно завършена? Клиентът ще получи имейл.')
                         ->modalSubmitActionLabel('Да, завърши поръчката'),
+                    
+                    Tables\Actions\Action::make('recordPayment')
+                        ->label('Запиши плащане')
+                        ->icon('heroicon-o-banknotes')
+                        ->color('success')
+                        ->visible(fn (ServiceOrder $record): bool => $record && $record->payment_status !== 'paid')
+                        ->form([
+                            Forms\Components\TextInput::make('amount')
+                                ->label('Сума')
+                                ->required()
+                                ->numeric()
+                                ->prefix('лв')
+                                ->default(function (ServiceOrder $record) {
+                                    return $record->getRemainingAmountAttribute();
+                                }),
+                            Forms\Components\Select::make('payment_method')
+                                ->label('Начин на плащане')
+                                ->options([
+                                    'cash' => 'В брой',
+                                    'card' => 'Карта',
+                                    'bank_transfer' => 'Банков превод',
+                                    'other' => 'Друго',
+                                ])
+                                ->required(),
+                            Forms\Components\TextInput::make('reference_number')
+                                ->label('Референтен номер')
+                                ->helperText('Номер на фактура, банков превод и т.н.')
+                                ->visible(fn (Get $get): bool => in_array($get('payment_method'), ['bank_transfer', 'card']))
+                                ->maxLength(255),
+                            Forms\Components\Textarea::make('notes')
+                                ->label('Бележки')
+                                ->rows(2),
+                        ])
+                        ->action(function (ServiceOrder $record, array $data): void {
+                            $record->addPayment(
+                                amount: (float) $data['amount'],
+                                method: $data['payment_method'],
+                                notes: $data['notes'] ?? null,
+                                referenceNumber: $data['reference_number'] ?? null
+                            );
+                        }),
                     
                     Tables\Actions\Action::make('cancel')
                         ->label('Отмени поръчката')
@@ -425,8 +677,10 @@ class ServiceOrderResource extends Resource
                         ->modalSubmitActionLabel('Да, отмени поръчката'),
                 ])
                 ->tooltip('Действия')
-                ->iconButton()
-                ->icon('heroicon-o-ellipsis-vertical'),
+                ->button()
+                ->color('gray')
+                ->label('Действия')
+                ->size('xs'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -449,13 +703,32 @@ class ServiceOrderResource extends Resource
                             redirect()->route('service-orders.print-bulk-labels', ['batchId' => $batchId]);
                         }),
                         
+                    Tables\Actions\BulkAction::make('markAsWaitingPayment')
+                        ->label('Маркирай - чакат плащане')
+                        ->icon('heroicon-o-banknotes')
+                        ->color('info')
+                        ->action(function (Collection $records): void {
+                            $records->each(function ($record) {
+                                if ($record->status === 'in_progress') {
+                                    $record->update([
+                                        'status' => 'waiting_payment',
+                                    ]);
+                                }
+                            });
+                        })
+                        ->requiresConfirmation()
+                        ->modalHeading('Маркирай избраните като чакащи плащане')
+                        ->modalDescription('Сигурни ли сте, че искате да маркирате избраните поръчки като чакащи плащане?')
+                        ->modalSubmitActionLabel('Да, чакат плащане')
+                        ->deselectRecordsAfterCompletion(),
+
                     Tables\Actions\BulkAction::make('markAsCompleted')
                         ->label('Маркирай като завършени')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
                         ->action(function (Collection $records): void {
                             $records->each(function ($record) {
-                                if ($record->status !== 'completed') {
+                                if ($record->status === 'waiting_payment' && $record->payment_status === 'paid') {
                                     $record->update([
                                         'status' => 'completed',
                                         'completed_at' => now(),
@@ -465,8 +738,29 @@ class ServiceOrderResource extends Resource
                         })
                         ->requiresConfirmation()
                         ->modalHeading('Маркирай избраните като завършени')
-                        ->modalDescription('Сигурни ли сте, че искате да маркирате избраните поръчки като завършени?')
+                        ->modalDescription('Сигурни ли сте, че искате да маркирате избраните поръчки като завършени? Клиентите ще получат имейли.')
                         ->modalSubmitActionLabel('Да, завърши поръчките')
+                        ->deselectRecordsAfterCompletion(),
+                        
+                    Tables\Actions\BulkAction::make('markAsPaid')
+                        ->label('Маркирай като платени')
+                        ->icon('heroicon-o-banknotes')
+                        ->color('success')
+                        ->action(function (Collection $records): void {
+                            $records->each(function ($record) {
+                                if ($record->payment_status !== 'paid') {
+                                    $record->update([
+                                        'payment_status' => 'paid',
+                                        'amount_paid' => $record->price,
+                                        'payment_date' => now(),
+                                    ]);
+                                }
+                            });
+                        })
+                        ->requiresConfirmation()
+                        ->modalHeading('Маркирай избраните като платени')
+                        ->modalDescription('Сигурни ли сте, че искате да маркирате избраните поръчки като платени в пълен размер?')
+                        ->modalSubmitActionLabel('Да, маркирай като платени')
                         ->deselectRecordsAfterCompletion(),
                 ]),
             ])
@@ -479,6 +773,7 @@ class ServiceOrderResource extends Resource
     {
         return [
             RelationManagers\SparePartsRelationManager::class,
+            RelationManagers\PaymentsRelationManager::class,
         ];
     }
 

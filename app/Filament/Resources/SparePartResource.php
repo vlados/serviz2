@@ -136,10 +136,20 @@ class SparePartResource extends Resource
                     ]),
             ])
             ->actions([
-                Tables\Actions\EditAction::make()
-                    ->label('Редактиране'),
-                Tables\Actions\ViewAction::make()
-                    ->label('Преглед'),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make()
+                        ->label('Преглед')
+                        ->icon('heroicon-o-eye'),
+                        
+                    Tables\Actions\EditAction::make()
+                        ->label('Редактиране')
+                        ->icon('heroicon-o-pencil'),
+                ])
+                ->tooltip('Действия')
+                ->button()
+                ->color('gray')
+                ->label('Действия')
+                ->size('xs'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

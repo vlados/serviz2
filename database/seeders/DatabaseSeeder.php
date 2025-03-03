@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
                 SparePartSeeder::class,
                 ScooterSeeder::class,
                 ServiceOrderSeeder::class,
+                PaymentSeeder::class,
             ]);
             
             $this->command->info('Demo data seeded successfully!');
