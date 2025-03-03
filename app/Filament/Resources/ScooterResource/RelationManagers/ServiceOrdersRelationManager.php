@@ -7,6 +7,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
+use Filament\Tables\Enums\ActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -92,6 +93,7 @@ class ServiceOrdersRelationManager extends RelationManager
                     ->label('Technician')
                     ->toggleable(),
             ])
+            ->actionsPosition(ActionsPosition::BeforeColumns)
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
@@ -116,6 +118,7 @@ class ServiceOrdersRelationManager extends RelationManager
                 ])
                 ->tooltip('Действия')
                 ->button()
+                ->dropdownPlacement('bottom-start')
                 ->color('gray')
                 ->label('Действия')
                 ->size('xs'),

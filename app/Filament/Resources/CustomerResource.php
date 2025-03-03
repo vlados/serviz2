@@ -11,6 +11,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Enums\ActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -154,6 +155,11 @@ class CustomerResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->contentGrid([
+                'md' => 2,
+                'xl' => 3,
+            ])
+            ->actionsPosition(ActionsPosition::BeforeColumns)
             ->filters([
                 Tables\Filters\Filter::make('has_scooters')
                     ->label('С тротинетки')
@@ -198,6 +204,7 @@ class CustomerResource extends Resource
                         ),
                 ])
                 ->tooltip('Действия')
+                ->dropdownPlacement('bottom-start')
                 ->button()
                 ->color('gray')
                 ->label('Действия')

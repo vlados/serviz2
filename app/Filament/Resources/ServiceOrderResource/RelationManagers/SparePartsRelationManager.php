@@ -7,6 +7,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
+use Filament\Tables\Enums\ActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -65,6 +66,7 @@ class SparePartsRelationManager extends RelationManager
                     ->getStateUsing(fn ($record) => 
                         $record->pivot->quantity * $record->pivot->price_per_unit),
             ])
+            ->actionsPosition(ActionsPosition::BeforeColumns)
             ->filters([
                 //
             ])
@@ -88,6 +90,7 @@ class SparePartsRelationManager extends RelationManager
                 ->tooltip('Действия')
                 ->button()
                 ->color('gray')
+                ->dropdownPlacement('bottom-start')
                 ->label('Действия')
                 ->size('xs'),
             ])

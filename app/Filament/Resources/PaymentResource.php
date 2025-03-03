@@ -14,6 +14,7 @@ use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Enums\ActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -242,6 +243,11 @@ class PaymentResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->contentGrid([
+                'md' => 2,
+                'xl' => 3,
+            ])
+            ->actionsPosition(ActionsPosition::BeforeColumns)
             ->filters([
                 Tables\Filters\SelectFilter::make('payment_method')
                     ->label('Начин на плащане')
@@ -342,6 +348,7 @@ class PaymentResource extends Resource
                 ->tooltip('Действия')
                 ->button()
                 ->color('gray')
+                ->dropdownPlacement('bottom-start')
                 ->label('Действия')
                 ->size('xs'),
             ])

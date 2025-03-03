@@ -6,6 +6,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
+use Filament\Tables\Enums\ActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -107,6 +108,7 @@ class PaymentsRelationManager extends RelationManager
                     ->label('Регистрирано от')
                     ->sortable(),
             ])
+            ->actionsPosition(ActionsPosition::BeforeColumns)
             ->filters([
                 //
             ])
@@ -129,6 +131,7 @@ class PaymentsRelationManager extends RelationManager
                 ])
                 ->tooltip('Действия')
                 ->button()
+                ->dropdownPlacement('bottom-start')
                 ->color('gray')
                 ->label('Действия')
                 ->size('xs'),

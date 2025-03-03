@@ -12,6 +12,7 @@ use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Enums\ActionsPosition;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\Indicator;
 use Filament\Tables\Filters\SelectFilter;
@@ -366,6 +367,10 @@ class ServiceOrderResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->contentGrid([
+                'md' => 2,
+                'xl' => 3,
+            ])
             ->columns([
                 Tables\Columns\TextColumn::make('order_number')
                     ->label('Номер')
@@ -484,6 +489,7 @@ class ServiceOrderResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->actionsPosition(ActionsPosition::BeforeColumns)
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Статус')
@@ -678,6 +684,7 @@ class ServiceOrderResource extends Resource
                 ])
                 ->tooltip('Действия')
                 ->button()
+                ->dropdownPlacement('bottom-start')
                 ->color('gray')
                 ->label('Действия')
                 ->size('xs'),

@@ -9,6 +9,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Enums\ActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -127,6 +128,11 @@ class SparePartResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->contentGrid([
+                'md' => 2,
+                'xl' => 3,
+            ])
+            ->actionsPosition(ActionsPosition::BeforeColumns)
             ->filters([
                 Tables\Filters\SelectFilter::make('is_active')
                     ->label('Статус')
@@ -147,6 +153,7 @@ class SparePartResource extends Resource
                 ])
                 ->tooltip('Действия')
                 ->button()
+                ->dropdownPlacement('bottom-start')
                 ->color('gray')
                 ->label('Действия')
                 ->size('xs'),

@@ -7,6 +7,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
+use Filament\Tables\Enums\ActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -76,6 +77,7 @@ class ScootersRelationManager extends RelationManager
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->actionsPosition(ActionsPosition::BeforeColumns)
             ->filters([
                 //
             ])
@@ -94,6 +96,7 @@ class ScootersRelationManager extends RelationManager
                 ])
                 ->tooltip('Действия')
                 ->button()
+                ->dropdownPlacement('bottom-start')
                 ->color('gray')
                 ->label('Действия')
                 ->size('xs'),
