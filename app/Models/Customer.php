@@ -19,10 +19,26 @@ class Customer extends Model
      */
     public function toSearchableArray()
     {
+        // Get original name
+        $nameOriginal = (string) $this->name;
+        
+        // Detect if the name contains Cyrillic characters
+        $containsCyrillic = $this->isCyrillic($nameOriginal);
+        
+        // Create both transliterators
+        $cyrillicToLatin = \Transliterator::create('Cyrillic-Latin');
+        $latinToCyrillic = \Transliterator::create('Latin-Cyrillic');
+        
+        // Create both versions of the name
+        $nameLatin = $containsCyrillic ? $cyrillicToLatin->transliterate($nameOriginal) : $nameOriginal;
+        $nameBg = !$containsCyrillic ? $latinToCyrillic->transliterate($nameOriginal) : $nameOriginal;
+        
         // Create a simplified searchable array with only what we need
         $searchable = [
             'id' => (string) $this->id,
-            'name' => (string) $this->name,
+            'name' => $nameOriginal, // Original name as entered
+            'name_latin' => $nameLatin, // Latin transliteration 
+            'name_bg' => $nameBg, // Bulgarian/Cyrillic version
             'phone' => (string) ($this->phone ?? ''),
             'email' => (string) ($this->email ?? ''),
             'address' => (string) ($this->address ?? ''),
@@ -36,6 +52,18 @@ class Customer extends Model
     }
     
     /**
+     * Detect if a string contains any Cyrillic characters
+     *
+     * @param string $text
+     * @return bool
+     */
+    protected function isCyrillic(string $text): bool
+    {
+        // Check if string contains any Cyrillic characters
+        return (bool) preg_match('/[\p{Cyrillic}]/u', $text);
+    }
+    
+    /**
      * The attributes that should be indexed.
      */
     public function typesenseQueryBy(): array
@@ -46,6 +74,19 @@ class Customer extends Model
             'email',
             'address',
             'notes',
+        ];
+    }
+    
+    /**
+     * Configure the typesense query parameters
+     */
+    public function typesenseQueryParameters(): array
+    {
+        return [
+            'query_by' => 'name,name_latin,name_bg,phone,email,address,notes',
+            'prefix' => true,
+            'infix' => true,
+            'typo_tokens_threshold' => 1
         ];
     }
     

@@ -196,6 +196,17 @@ return [
                         [
                             'name' => 'customer_name',
                             'type' => 'string',
+                            'infix' => true,
+                        ],
+                        [
+                            'name' => 'customer_name_latin',
+                            'type' => 'string',
+                            'infix' => true,
+                        ],
+                        [
+                            'name' => 'customer_name_bg',
+                            'type' => 'string',
+                            'infix' => true,
                         ],
                         [
                             'name' => 'customer_phone',
@@ -214,7 +225,23 @@ return [
                             'type' => 'string',
                         ],
                         [
+                            'name' => 'problem_description_latin',
+                            'type' => 'string',
+                        ],
+                        [
+                            'name' => 'problem_description_bg',
+                            'type' => 'string',
+                        ],
+                        [
                             'name' => 'work_performed',
+                            'type' => 'string',
+                        ],
+                        [
+                            'name' => 'work_performed_latin',
+                            'type' => 'string',
+                        ],
+                        [
+                            'name' => 'work_performed_bg',
                             'type' => 'string',
                         ],
                         [
@@ -235,9 +262,14 @@ return [
                         ],
                     ],
                     'default_sorting_field' => 'created_at',
+                    'symbols_to_index' => ['*'],
+                    'token_separators' => [' ', '-', '_'],
                 ],
                 'search-parameters' => [
-                    'query_by' => 'order_number,customer_name,customer_phone,scooter_model,scooter_serial_number,problem_description,work_performed,status,payment_status'
+                    'query_by' => 'order_number,customer_name,customer_name_latin,customer_name_bg,customer_phone,scooter_model,scooter_serial_number,problem_description,problem_description_latin,problem_description_bg,work_performed,work_performed_latin,work_performed_bg,status,payment_status',
+                    'prefix' => true,
+                    'infix' => true,
+                    'typo_tokens_threshold' => 1
                 ],
             ],
             \App\Models\Customer::class => [
@@ -251,6 +283,17 @@ return [
                         [
                             'name' => 'name',
                             'type' => 'string',
+                            'infix' => true,
+                        ],
+                        [
+                            'name' => 'name_latin',
+                            'type' => 'string',
+                            'infix' => true,
+                        ],
+                        [
+                            'name' => 'name_bg',
+                            'type' => 'string',
+                            'infix' => true,
                         ],
                         [
                             'name' => 'phone',
@@ -282,9 +325,14 @@ return [
                         ],
                     ],
                     'default_sorting_field' => 'created_at',
+                    'symbols_to_index' => ['*'],
+                    'token_separators' => [' ', '-', '_'],
                 ],
                 'search-parameters' => [
-                    'query_by' => 'name,phone,email,address,notes'
+                    'query_by' => 'name,name_latin,name_bg,phone,email,address,notes',
+                    'prefix' => true,
+                    'infix' => true,
+                    'typo_tokens_threshold' => 1
                 ],
             ],
             \App\Models\Scooter::class => [
@@ -331,7 +379,8 @@ return [
                     'default_sorting_field' => 'created_at',
                 ],
                 'search-parameters' => [
-                    'query_by' => 'model,serial_number,status,customer_name,max_speed,battery_capacity,weight'
+                    'query_by' => 'model,serial_number,status,customer_name,max_speed,battery_capacity,weight',
+                    'enable_transliteration' => true
                 ],
             ],
             \App\Models\SparePart::class => [
@@ -378,7 +427,8 @@ return [
                     'default_sorting_field' => 'created_at',
                 ],
                 'search-parameters' => [
-                    'query_by' => 'name,part_number,description'
+                    'query_by' => 'name,part_number,description',
+                    'enable_transliteration' => true
                 ],
             ],
             \App\Models\Payment::class => [
@@ -425,7 +475,8 @@ return [
                     'default_sorting_field' => 'created_at',
                 ],
                 'search-parameters' => [
-                    'query_by' => 'payment_method,reference_number,notes,service_order_number,customer_name'
+                    'query_by' => 'payment_method,reference_number,notes,service_order_number,customer_name',
+                    'enable_transliteration' => true
                 ],
             ],
         ],

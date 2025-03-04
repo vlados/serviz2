@@ -22,16 +22,42 @@ class ServiceOrder extends Model
      */
     public function toSearchableArray()
     {
+        // Get customer name or empty string
+        $customerName = (string) ($this->customer->name ?? '');
+        
+        // Create both transliterators
+        $cyrillicToLatin = \Transliterator::create('Cyrillic-Latin');
+        $latinToCyrillic = \Transliterator::create('Latin-Cyrillic');
+        
+        // Check if texts contain Cyrillic
+        $hasCustomerNameCyrillic = $this->isCyrillic($customerName);
+        
+        // Create both versions of the customer name
+        $customerNameLatin = $hasCustomerNameCyrillic ? $cyrillicToLatin->transliterate($customerName) : $customerName;
+        $customerNameBg = !$hasCustomerNameCyrillic ? $latinToCyrillic->transliterate($customerName) : $customerName;
+        
+        // Handle problem description
+        $problemDescription = (string) ($this->problem_description ?? '');
+        $hasProblemCyrillic = $this->isCyrillic($problemDescription);
+        $problemDescriptionLatin = $hasProblemCyrillic ? $cyrillicToLatin->transliterate($problemDescription) : $problemDescription;
+        $problemDescriptionBg = !$hasProblemCyrillic ? $latinToCyrillic->transliterate($problemDescription) : $problemDescription;
+        
+        // Handle work performed
+        $workPerformed = (string) ($this->work_performed ?? '');
+        $hasWorkCyrillic = $this->isCyrillic($workPerformed);
+        $workPerformedLatin = $hasWorkCyrillic ? $cyrillicToLatin->transliterate($workPerformed) : $workPerformed;
+        $workPerformedBg = !$hasWorkCyrillic ? $latinToCyrillic->transliterate($workPerformed) : $workPerformed;
+        
         // Create a simplified searchable array with only what we need
         $searchable = [
             'id' => (string) $this->id,
             'order_number' => (string) $this->order_number,
-            'customer_name' => (string) ($this->customer->name ?? ''),
+            'customer_name' => $customerName,
+            'customer_name_latin' => $customerNameLatin,
+            'customer_name_bg' => $customerNameBg,
             'customer_phone' => (string) ($this->customer->phone ?? ''),
             'scooter_model' => (string) ($this->scooter->model ?? ''),
             'scooter_serial_number' => (string) ($this->scooter->serial_number ?? ''),
-            'problem_description' => (string) ($this->problem_description ?? ''),
-            'work_performed' => (string) ($this->work_performed ?? ''),
             'status' => (string) ($this->status ?? ''),
             'payment_status' => (string) ($this->payment_status ?? ''),
             'price' => (float) ($this->price ?? 0),
@@ -40,6 +66,18 @@ class ServiceOrder extends Model
         ];
         
         return $searchable;
+    }
+    
+    /**
+     * Detect if a string contains any Cyrillic characters
+     *
+     * @param string $text
+     * @return bool
+     */
+    protected function isCyrillic(string $text): bool
+    {
+        // Check if string contains any Cyrillic characters
+        return (bool) preg_match('/[\p{Cyrillic}]/u', $text);
     }
     
     /**
@@ -53,10 +91,21 @@ class ServiceOrder extends Model
             'customer_phone',
             'scooter_model',
             'scooter_serial_number',
-            'problem_description',
-            'work_performed',
             'status',
             'payment_status',
+        ];
+    }
+    
+    /**
+     * Configure the typesense query parameters
+     */
+    public function typesenseQueryParameters(): array
+    {
+        return [
+            'query_by' => 'order_number,customer_name,customer_name_latin,customer_name_bg,customer_phone,scooter_model,scooter_serial_number,status,payment_status',
+            'prefix' => true,
+            'infix' => true,
+            'typo_tokens_threshold' => 1
         ];
     }
     

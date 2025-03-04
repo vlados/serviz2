@@ -46,6 +46,19 @@ class SparePart extends Model
         ];
     }
     
+    /**
+     * Configure the typesense query parameters
+     */
+    public function typesenseQueryParameters(): array
+    {
+        return [
+            'query_by' => 'name,part_number,description',
+            'enable_transliteration' => true,
+            'prefix' => true,
+            'infix' => true,
+        ];
+    }
+    
     protected $fillable = [
         'name', // име
         'part_number', // номер на част
