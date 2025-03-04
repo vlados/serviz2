@@ -8,9 +8,12 @@ use Filament\Actions;
 use Filament\Resources\Components\Tab;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Database\Eloquent\Builder;
+use Kainiklas\FilamentScout\Traits\InteractsWithScout;
 
 class ListPayments extends ListRecords
 {
+    use InteractsWithScout;
+    
     protected static string $resource = PaymentResource::class;
 
     protected function getHeaderActions(): array

@@ -9,10 +9,56 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
+use Laravel\Scout\Searchable;
 
 class ServiceOrder extends Model
 {
-    use HasFactory;
+    use HasFactory, Searchable;
+    
+    /**
+     * Get the indexable data array for the model.
+     *
+     * @return array
+     */
+    public function toSearchableArray()
+    {
+        // Create a simplified searchable array with only what we need
+        $searchable = [
+            'id' => (string) $this->id,
+            'order_number' => (string) $this->order_number,
+            'customer_name' => (string) ($this->customer->name ?? ''),
+            'customer_phone' => (string) ($this->customer->phone ?? ''),
+            'scooter_model' => (string) ($this->scooter->model ?? ''),
+            'scooter_serial_number' => (string) ($this->scooter->serial_number ?? ''),
+            'problem_description' => (string) ($this->problem_description ?? ''),
+            'work_performed' => (string) ($this->work_performed ?? ''),
+            'status' => (string) ($this->status ?? ''),
+            'payment_status' => (string) ($this->payment_status ?? ''),
+            'price' => (float) ($this->price ?? 0),
+            'created_at' => (int) (strtotime($this->created_at) * 1000),
+            'received_at' => isset($this->received_at) ? (int) (strtotime($this->received_at) * 1000) : null,
+        ];
+        
+        return $searchable;
+    }
+    
+    /**
+     * The attributes that should be indexed.
+     */
+    public function typesenseQueryBy(): array
+    {
+        return [
+            'order_number',
+            'customer_name',
+            'customer_phone',
+            'scooter_model',
+            'scooter_serial_number',
+            'problem_description',
+            'work_performed',
+            'status',
+            'payment_status',
+        ];
+    }
     
     protected static function booted()
     {

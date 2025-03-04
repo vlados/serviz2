@@ -10,5 +10,9 @@ export default {
         './resources/views/vendor/filament-panels/**/*.blade.php',
         './vendor/filament/**/*.blade.php',
         './vendor/ralphjsmit/laravel-filament-activitylog/resources/**/*.blade.php',
+        // './vendor/awcodes/filament-quick-create/resources/**/*.blade.php',
     ],
+    theme: {
+    },
+
 }

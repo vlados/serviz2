@@ -10,6 +10,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
+use Kainiklas\FilamentScout\Forms\Components\ScoutSelect;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Enums\ActionsPosition;
@@ -35,6 +36,8 @@ class ServiceOrderResource extends Resource
     protected static ?string $navigationGroup = 'Управление на Сервиза';
     
     protected static ?int $navigationSort = 1;
+    
+    protected static ?string $recordTitleAttribute = 'order_number';
     
     public static function getGloballySearchableAttributes(): array
     {
@@ -88,13 +91,15 @@ class ServiceOrderResource extends Resource
                                         
                                         Forms\Components\Group::make()
                                             ->schema([
-                                                Forms\Components\Select::make('customer_id')
+                                                // Use ScoutSelect for improved search
+                                                Kainiklas\FilamentScout\Forms\Components\ScoutSelect::make('customer_id')
                                                     ->label('Клиент')
                                                     ->relationship('customer', 'name')
                                                     ->required()
                                                     ->searchable()
                                                     ->preload()
                                                     ->live()
+                                                    ->useScout()
                                                     ->afterStateUpdated(fn (Select $component) => $component
                                                         ->getContainer()
                                                         ->getComponent('scooterSelector')
@@ -560,6 +565,16 @@ class ServiceOrderResource extends Resource
                         'bank_transfer' => 'Банков превод',
                         'other' => 'Друго',
                     ]),
+                    
+                Tables\Filters\Filter::make('completed_but_unpaid')
+                    ->label('Завършени, но неплатени')
+                    ->toggle()
+                    ->query(function (Builder $query): Builder {
+                        return $query
+                            ->where('status', 'completed')
+                            ->where('payment_status', 'unpaid');
+                    })
+                    ->indicator('Завършени, но неплатени'),
                 ], layout: FiltersLayout::AboveContent)
             ->filtersFormColumns(3)
             ->filtersTriggerAction(

@@ -30,6 +30,8 @@ class CustomerResource extends Resource
     
     protected static ?int $navigationSort = 1;
     
+    protected static ?string $recordTitleAttribute = 'name';
+    
     public static function getGloballySearchableAttributes(): array
     {
         return ['name', 'phone', 'email', 'address'];
@@ -137,7 +139,7 @@ class CustomerResource extends Resource
                     ->color('primary')
                     ->badge(),
                     
-                Tables\Columns\TextColumn::make('serviceOrders_count')
+                Tables\Columns\TextColumn::make('service_orders_count')
                     ->counts('serviceOrders')
                     ->label('Сервизни Поръчки')
                     ->icon('heroicon-o-wrench-screwdriver')

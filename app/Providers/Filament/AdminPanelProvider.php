@@ -27,6 +27,9 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Filament\Support\Enums\MaxWidth;
+use TomatoPHP\FilamentPWA\FilamentPWAPlugin;
+use Kainiklas\FilamentScout\FilamentScoutPlugin;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -67,6 +70,8 @@ class AdminPanelProvider extends PanelProvider
                 \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
                 QuickCreatePlugin::make()
                     ->label('Бързо създаване'),
+                FilamentPWAPlugin::make(),
+                FilamentScoutPlugin::make(),
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -79,8 +84,12 @@ class AdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
-            ->spa()
-            // ->viteTheme('resources/css/filament/admin/theme.css')
+            ->maxContentWidth(MaxWidth::Full)
+            ->font('')
+            ->globalSearch(true)
+            ->sidebarWidth("250px")
+
+            ->viteTheme('resources/css/filament/admin/theme.css')
             ->sidebarCollapsibleOnDesktop()
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
             ->authMiddleware([
