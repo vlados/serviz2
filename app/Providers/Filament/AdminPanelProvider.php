@@ -70,7 +70,8 @@ class AdminPanelProvider extends PanelProvider
                 \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
                 QuickCreatePlugin::make()
                     ->label('Бързо създаване'),
-                FilamentPWAPlugin::make(),
+                FilamentPWAPlugin::make()
+                    ->allowPWASettings(false),
                 FilamentScoutPlugin::make(),
             ])
             ->middleware([
@@ -87,6 +88,7 @@ class AdminPanelProvider extends PanelProvider
             ->maxContentWidth(MaxWidth::Full)
             ->font('')
             ->globalSearch(true)
+            ->globalSearchDebounce(100)
             ->sidebarWidth("250px")
 
             ->viteTheme('resources/css/filament/admin/theme.css')

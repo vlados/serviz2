@@ -29,7 +29,6 @@ class PaymentResource extends Resource
     protected static ?string $pluralModelLabel = 'Плащания';
     protected static ?string $navigationLabel = 'Плащания';
     
-    protected static ?string $navigationGroup = 'Финанси и Отчети';
     protected static ?int $navigationSort = 10;
 
     public static function form(Form $form): Form

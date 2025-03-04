@@ -32,9 +32,7 @@ class ServiceOrderResource extends Resource
     protected static ?string $pluralModelLabel = 'Сервизни Поръчки';
 
     protected static ?string $navigationIcon = 'heroicon-o-wrench-screwdriver';
-    
-    protected static ?string $navigationGroup = 'Управление на Сервиза';
-    
+        
     protected static ?int $navigationSort = 1;
     
     protected static ?string $recordTitleAttribute = 'order_number';
@@ -92,7 +90,7 @@ class ServiceOrderResource extends Resource
                                         Forms\Components\Group::make()
                                             ->schema([
                                                 // Use ScoutSelect for improved search
-                                                Kainiklas\FilamentScout\Forms\Components\ScoutSelect::make('customer_id')
+                                                \Kainiklas\FilamentScout\Forms\Components\ScoutSelect::make('customer_id')
                                                     ->label('Клиент')
                                                     ->relationship('customer', 'name')
                                                     ->required()

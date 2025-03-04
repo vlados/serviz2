@@ -25,9 +25,7 @@ class CustomerResource extends Resource
     protected static ?string $pluralModelLabel = 'Клиенти';
 
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
-    
-    protected static ?string $navigationGroup = 'Клиенти и Тротинетки';
-    
+        
     protected static ?int $navigationSort = 1;
     
     protected static ?string $recordTitleAttribute = 'name';

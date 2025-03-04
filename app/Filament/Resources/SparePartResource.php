@@ -23,9 +23,7 @@ class SparePartResource extends Resource
     protected static ?string $pluralModelLabel = 'Резервни Части';
 
     protected static ?string $navigationIcon = 'heroicon-o-cog';
-    
-    protected static ?string $navigationGroup = 'Управление на Сервиза';
-    
+        
     protected static ?int $navigationSort = 2;
     
     public static function getGloballySearchableAttributes(): array

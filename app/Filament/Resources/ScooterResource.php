@@ -26,8 +26,6 @@ class ScooterResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-bolt';
     
-    protected static ?string $navigationGroup = 'Клиенти и Тротинетки';
-    
     protected static ?int $navigationSort = 2;
     
     public static function getGloballySearchableAttributes(): array
