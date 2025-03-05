@@ -26,7 +26,14 @@ class ServiceOrderReadyForPickup extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        // Check if customer has a valid phone number for SMS
+        $channels = ['mail'];
+        
+        if (!empty($notifiable->phone)) {
+            $channels[] = VonageSmsChannel::class;
+        }
+        
+        return $channels;
     }
 
     /**
