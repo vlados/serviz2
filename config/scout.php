@@ -245,16 +245,12 @@ return [
                             'type' => 'string',
                         ],
                         [
-                            'name' => 'status',
-                            'type' => 'string',
-                        ],
-                        [
                             'name' => 'payment_status',
                             'type' => 'string',
                         ],
                         [
                             'name' => 'price',
-                            'type' => 'float',
+                            'type' => 'string',
                         ],
                         [
                             'name' => 'created_at',
@@ -266,7 +262,7 @@ return [
                     'token_separators' => [' ', '-', '_'],
                 ],
                 'search-parameters' => [
-                    'query_by' => 'order_number,customer_name,customer_name_latin,customer_name_bg,customer_phone,scooter_model,scooter_serial_number,problem_description,problem_description_latin,problem_description_bg,work_performed,work_performed_latin,work_performed_bg,status,payment_status',
+                    'query_by' => 'order_number,customer_name,customer_name_latin,customer_name_bg,customer_phone,scooter_model,scooter_serial_number,problem_description,problem_description_latin,problem_description_bg,payment_status,price',
                     'prefix' => true,
                     'infix' => true,
                     'typo_tokens_threshold' => 1
@@ -352,23 +348,7 @@ return [
                             'type' => 'string',
                         ],
                         [
-                            'name' => 'status',
-                            'type' => 'string',
-                        ],
-                        [
                             'name' => 'customer_name',
-                            'type' => 'string',
-                        ],
-                        [
-                            'name' => 'max_speed',
-                            'type' => 'string',
-                        ],
-                        [
-                            'name' => 'battery_capacity',
-                            'type' => 'string',
-                        ],
-                        [
-                            'name' => 'weight',
                             'type' => 'string',
                         ],
                         [
@@ -379,8 +359,10 @@ return [
                     'default_sorting_field' => 'created_at',
                 ],
                 'search-parameters' => [
-                    'query_by' => 'model,serial_number,status,customer_name,max_speed,battery_capacity,weight',
-                    'enable_transliteration' => true
+                    'query_by' => 'model,serial_number,customer_name',
+                    'enable_transliteration' => true,
+                    'prefix' => true,
+                    'infix' => true
                 ],
             ],
             \App\Models\SparePart::class => [
@@ -428,54 +410,6 @@ return [
                 ],
                 'search-parameters' => [
                     'query_by' => 'name,part_number,description',
-                    'enable_transliteration' => true
-                ],
-            ],
-            \App\Models\Payment::class => [
-                'collection-schema' => [
-                    'fields' => [
-                        [
-                            'name' => 'id',
-                            'type' => 'string',
-                            'facet' => false,
-                        ],
-                        [
-                            'name' => 'amount',
-                            'type' => 'float',
-                        ],
-                        [
-                            'name' => 'payment_method',
-                            'type' => 'string',
-                        ],
-                        [
-                            'name' => 'reference_number',
-                            'type' => 'string',
-                        ],
-                        [
-                            'name' => 'notes',
-                            'type' => 'string',
-                        ],
-                        [
-                            'name' => 'service_order_number',
-                            'type' => 'string',
-                        ],
-                        [
-                            'name' => 'customer_name',
-                            'type' => 'string',
-                        ],
-                        [
-                            'name' => 'payment_date',
-                            'type' => 'int64',
-                        ],
-                        [
-                            'name' => 'created_at',
-                            'type' => 'int64',
-                        ],
-                    ],
-                    'default_sorting_field' => 'created_at',
-                ],
-                'search-parameters' => [
-                    'query_by' => 'payment_method,reference_number,notes,service_order_number,customer_name',
                     'enable_transliteration' => true
                 ],
             ],

@@ -63,4 +63,19 @@ class ServiceOrderReadyForPickup extends Notification implements ShouldQueue
             'completed_at' => $this->serviceOrder->completed_at,
         ];
     }
+    
+    /**
+     * Get the Vonage / SMS representation of the notification.
+     *
+     * @param object $notifiable
+     * @return string
+     */
+    public function toVonage(object $notifiable): string
+    {
+        $scooterModel = $this->serviceOrder->scooter->model;
+        $orderNumber = $this->serviceOrder->order_number;
+        $price = number_format($this->serviceOrder->price, 2);
+        
+        return "Здравейте, {$notifiable->name}! Вашата тротинетка {$scooterModel} е готова за вземане. Номер на поръчка: {$orderNumber}. Обща сума: {$price} лв.";
+    }
 }

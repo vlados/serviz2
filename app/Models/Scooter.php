@@ -25,7 +25,6 @@ class Scooter extends Model
             'model' => (string) $this->model,
             'serial_number' => (string) ($this->serial_number ?? ''),
             'customer_name' => (string) ($this->customer->name ?? ''),
-            'battery_capacity' => (string) ($this->battery_capacity ?? ''),
             'created_at' => (int) (strtotime($this->created_at) * 1000),
         ];
         
@@ -41,7 +40,6 @@ class Scooter extends Model
             'model',
             'serial_number',
             'customer_name',
-            'battery_capacity',
         ];
     }
     
@@ -51,7 +49,7 @@ class Scooter extends Model
     public function typesenseQueryParameters(): array
     {
         return [
-            'query_by' => 'model,serial_number,customer_name,battery_capacity',
+            'query_by' => 'model,serial_number,customer_name',
             'enable_transliteration' => true,
             'prefix' => true,
             'infix' => true,

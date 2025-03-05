@@ -19,7 +19,8 @@
         "milon/barcode": "^12.0",
         "spatie/laravel-permission": "^6.16",
         "tomatophp/filament-pwa": "^1.0",
-        "typesense/typesense-php": "^5.0"
+        "typesense/typesense-php": "^5.0",
+        "vonage/client": "^4.1"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

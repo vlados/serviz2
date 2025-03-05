@@ -58,9 +58,14 @@ class ServiceOrder extends Model
             'customer_phone' => (string) ($this->customer->phone ?? ''),
             'scooter_model' => (string) ($this->scooter->model ?? ''),
             'scooter_serial_number' => (string) ($this->scooter->serial_number ?? ''),
-            'status' => (string) ($this->status ?? ''),
+            'problem_description' => $problemDescription,
+            'problem_description_latin' => $problemDescriptionLatin,
+            'problem_description_bg' => $problemDescriptionBg,
+            'work_performed' => $workPerformed,
+            'work_performed_latin' => $workPerformedLatin,
+            'work_performed_bg' => $workPerformedBg,
             'payment_status' => (string) ($this->payment_status ?? ''),
-            'price' => (float) ($this->price ?? 0),
+            'price' => (string) ($this->price ?? ''),
             'created_at' => (int) (strtotime($this->created_at) * 1000),
             'received_at' => isset($this->received_at) ? (int) (strtotime($this->received_at) * 1000) : null,
         ];
@@ -91,8 +96,7 @@ class ServiceOrder extends Model
             'customer_phone',
             'scooter_model',
             'scooter_serial_number',
-            'status',
-            'payment_status',
+            'problem_description',
         ];
     }
     
@@ -102,7 +106,7 @@ class ServiceOrder extends Model
     public function typesenseQueryParameters(): array
     {
         return [
-            'query_by' => 'order_number,customer_name,customer_name_latin,customer_name_bg,customer_phone,scooter_model,scooter_serial_number,status,payment_status',
+            'query_by' => 'order_number,customer_name,customer_name_latin,customer_name_bg,customer_phone,scooter_model,scooter_serial_number,problem_description,problem_description_latin,problem_description_bg,payment_status,price',
             'prefix' => true,
             'infix' => true,
             'typo_tokens_threshold' => 1

@@ -117,4 +117,19 @@ class Customer extends Model
     {
         return $this->email;
     }
+    
+    /**
+     * Route notifications for the Vonage SMS channel.
+     *
+     * @param \Illuminate\Notifications\Notification $notification
+     * @return string|null
+     */
+    public function routeNotificationForVonage($notification): ?string
+    {
+        if (empty($this->phone)) {
+            return null;
+        }
+        
+        return $this->phone;
+    }
 }
