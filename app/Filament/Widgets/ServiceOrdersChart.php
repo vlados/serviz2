@@ -13,6 +13,7 @@ class ServiceOrdersChart extends ChartWidget
 
     protected int|string|array $columnSpan = 'full';
     protected static ?string $maxHeight = '300px';
+    protected static ?int $sort = 2;
 
 
     protected function getData(): array

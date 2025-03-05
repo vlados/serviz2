@@ -30,6 +30,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Support\Enums\MaxWidth;
 use TomatoPHP\FilamentPWA\FilamentPWAPlugin;
 use Kainiklas\FilamentScout\FilamentScoutPlugin;
+use Filament\FontProviders\GoogleFontProvider;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -56,9 +57,9 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
+                LatestServiceOrders::class,
                 ServiceStatsOverview::class,
                 ServiceOrdersChart::class,
-                LatestServiceOrders::class,
             ])
             ->navigationGroups([
                 NavigationGroup::make()
@@ -86,7 +87,7 @@ class AdminPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->maxContentWidth(MaxWidth::Full)
-            ->font('')
+            ->font('Sofia Sans', provider: GoogleFontProvider::class)
             ->globalSearch(true)
             ->globalSearchDebounce(100)
             ->sidebarWidth("250px")

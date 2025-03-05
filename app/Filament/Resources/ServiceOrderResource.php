@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Str;
+use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
 
 class ServiceOrderResource extends Resource
 {
@@ -415,13 +416,13 @@ class ServiceOrderResource extends Resource
                     ->label('Клиент')
                     ->searchable()
                     ->sortable()
-                    ->description(fn ($record) => $record->customer->phone ?? '')
+                    // ->description(fn ($record) => $record->customer->phone ?? '')
                     ->icon('heroicon-o-user'),
                 
                 Tables\Columns\TextColumn::make('scooter.model')
                     ->label('Тротинетка')
                     ->searchable()
-                    ->description(fn ($record) => $record->scooter->serial_number ?? 'Без сериен номер')
+                    // ->description(fn ($record) => $record->scooter->serial_number ?? 'Без сериен номер')
                     ->icon('heroicon-o-truck'),
                 
                 Tables\Columns\TextColumn::make('received_at')
@@ -496,7 +497,6 @@ class ServiceOrderResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Статус')
-                    ->multiple()
                     ->options([
                         'pending' => 'В очакване',
                         'in_progress' => 'В процес',
@@ -505,41 +505,10 @@ class ServiceOrderResource extends Resource
                         'cancelled' => 'Отказана',
                     ]),
                 
-                Tables\Filters\Filter::make('received_at')
+                    DateRangeFilter::make('received_at')
                     ->label('Период на приемане')
-                    ->form([
-                        Forms\Components\Grid::make(2)
-                            ->schema([
-                                Forms\Components\DatePicker::make('received_from')
-                                    ->label('От дата'),
-                                Forms\Components\DatePicker::make('received_until')
-                                    ->label('До дата'),
-                            ]),
-                    ])
-                    ->indicateUsing(function (array $data): array {
-                        $indicators = [];
-                        
-                        if ($data['received_from'] ?? null) {
-                            $indicators['received_from'] = 'От дата: ' . \Carbon\Carbon::parse($data['received_from'])->format('d.m.Y');
-                        }
-                        
-                        if ($data['received_until'] ?? null) {
-                            $indicators['received_until'] = 'До дата: ' . \Carbon\Carbon::parse($data['received_until'])->format('d.m.Y');
-                        }
-                        
-                        return $indicators;
-                    })
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when(
-                                $data['received_from'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('received_at', '>=', $date),
-                            )
-                            ->when(
-                                $data['received_until'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('received_at', '<=', $date),
-                            );
-                    }),
+                    ->withIndicator()
+                    ->timezone('Europe/Sofia'),
                     
                 Tables\Filters\SelectFilter::make('technician')
                     ->label('Техник')
@@ -574,18 +543,7 @@ class ServiceOrderResource extends Resource
                     })
                     ->indicator('Завършени, но неплатени'),
                 ], layout: FiltersLayout::AboveContent)
-            ->filtersFormColumns(3)
-            ->filtersTriggerAction(
-                fn (Tables\Actions\Action $action) => $action
-                    ->button()
-                    ->label('Филтри')
-            )
-            ->persistFiltersInSession()
-            ->filtersApplyAction(
-                fn (Tables\Actions\Action $action) => $action
-                    ->button()
-                    ->label('Приложи филтрите')
-            )
+            ->filtersFormColumns(5)
             ->actions([
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\ViewAction::make()

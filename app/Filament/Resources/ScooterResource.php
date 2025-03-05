@@ -199,8 +199,7 @@ class ScooterResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->weight('bold')
-                    ->icon('heroicon-o-bolt')
-                    ->description(fn ($record) => $record->serial_number),
+                    ->icon('heroicon-o-bolt'),
                     
                 Tables\Columns\TextColumn::make('status')
                     ->label('Статус')

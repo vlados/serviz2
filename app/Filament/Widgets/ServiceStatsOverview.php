@@ -11,6 +11,11 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class ServiceStatsOverview extends BaseWidget
 {
+    protected static ?int $sort = 1;
+    function getColumns(): int
+    {
+        return 6;
+    }
     protected function getStats(): array
     {
         return [

@@ -1,2 +1,16 @@
 @import '../../../../vendor/filament/filament/resources/css/theme.css';
 
+@layer components {
+    .fi-sidebar-nav {
+        /* @apply !pl-0; */
+    }
+    .fi-sidebar-item {
+        @apply -ml-2;
+    }
+    .fi-sidebar-item-active a {
+        @apply bg-gray-950 text-white hover:bg-gray-800 rounded-l-none;
+        svg {
+            @apply text-white;
+        }
+    }
+}
