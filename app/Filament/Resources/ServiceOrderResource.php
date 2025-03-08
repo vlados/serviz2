@@ -28,16 +28,16 @@ use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
 class ServiceOrderResource extends Resource
 {
     protected static ?string $model = ServiceOrder::class;
-    
+
     protected static ?string $modelLabel = 'Сервизна Поръчка';
     protected static ?string $pluralModelLabel = 'Сервизни Поръчки';
 
     protected static ?string $navigationIcon = 'heroicon-o-wrench-screwdriver';
-        
+
     protected static ?int $navigationSort = 1;
-    
+
     protected static ?string $recordTitleAttribute = 'order_number';
-    
+
     public static function getGloballySearchableAttributes(): array
     {
         return [
@@ -48,12 +48,12 @@ class ServiceOrderResource extends Resource
             'problem_description'
         ];
     }
-    
+
     public static function getGlobalSearchResultTitle(Model $record): string
     {
         return 'Поръчка #' . $record->order_number;
     }
-    
+
     public static function getGlobalSearchResultDetails(Model $record): array
     {
         return [
@@ -87,7 +87,7 @@ class ServiceOrderResource extends Resource
                                             ->maxLength(255)
                                             ->default(fn () => 'SO-' . now()->format('Ymd') . '-' . random_int(1000, 9999))
                                             ->disabled(),
-                                        
+
                                         Forms\Components\Group::make()
                                             ->schema([
                                                 // Use ScoutSelect for improved search
@@ -119,18 +119,18 @@ class ServiceOrderResource extends Resource
                                                             ->maxLength(255),
                                                     ])
                                                     ->columnSpan(2),
-                                                
+
                                                 Forms\Components\Group::make()
                                                     ->schema(fn (Get $get) => [
                                                         Forms\Components\Select::make('scooter_id')
                                                             ->label('Тротинетка')
                                                             ->options(function (Get $get) {
                                                                 $customerId = $get('customer_id');
-                                                                
+
                                                                 if (!$customerId) {
                                                                     return [];
                                                                 }
-                                                                
+
                                                                 return \App\Models\Scooter::query()
                                                                     ->where('customer_id', $customerId)
                                                                     ->pluck('model', 'id')
@@ -139,35 +139,58 @@ class ServiceOrderResource extends Resource
                                                             ->required()
                                                             ->searchable()
                                                             ->preload()
-                                                            ->createOptionForm([
-                                                                Forms\Components\TextInput::make('model')
-                                                                    ->label('Модел')
-                                                                    ->required()
-                                                                    ->maxLength(255),
-                                                                Forms\Components\TextInput::make('serial_number')
-                                                                    ->label('Сериен номер')
-                                                                    ->required()
-                                                                    ->maxLength(255),
-                                                                Forms\Components\Hidden::make('customer_id')
-                                                                    ->default(function (Get $get) {
-                                                                        return $get('../../customer_id');
-                                                                    }),
-                                                            ])
+                                                            ->live()
+                                                            ->suffixAction(
+                                                                Forms\Components\Actions\Action::make('createNewScooter')
+                                                                    ->icon('heroicon-m-plus')
+                                                                    ->requiresConfirmation()
+                                                                    ->modalHeading('Добавяне на нова тротинетка')
+                                                                    ->modalDescription('Моля, въведете данните за новата тротинетка.')
+                                                                    ->form([
+                                                                        Forms\Components\TextInput::make('model')
+                                                                            ->label('Модел')
+                                                                            ->required()
+                                                                            ->maxLength(255),
+                                                                        Forms\Components\TextInput::make('serial_number')
+                                                                            ->label('Сериен номер')
+                                                                            ->required()
+                                                                            ->maxLength(255),
+                                                                    ])
+                                                                    ->action(function (array $data, Get $get, Set $set) {
+                                                                        $customerId = $get('customer_id');
+
+                                                                        if (!$customerId) {
+                                                                            throw new \Exception('Моля, първо изберете клиент.');
+                                                                        }
+
+                                                                        // Create the new scooter
+                                                                        $scooter = \App\Models\Scooter::create([
+                                                                            'model' => $data['model'],
+                                                                            'serial_number' => $data['serial_number'],
+                                                                            'customer_id' => $customerId,
+                                                                            'status' => 'in_use',
+                                                                        ]);
+
+                                                                        // Set the scooter_id in the form
+                                                                        $set('scooter_id', $scooter->id);
+                                                                    })
+                                                                    ->visible(fn (Get $get): bool => (bool) $get('customer_id'))
+                                                            )
                                                     ])
                                                     ->key('scooterSelector')
                                                     ->columnSpan(2),
                                             ])->columns(4),
-                                        
+
                                         Forms\Components\Grid::make(3)
                                             ->schema([
                                                 Forms\Components\DatePicker::make('received_at')
                                                     ->label('Дата на приемане')
                                                     ->required()
                                                     ->default(now()),
-                                                
+
                                                 Forms\Components\DatePicker::make('completed_at')
                                                     ->label('Дата на завършване'),
-                                                
+
                                                 Forms\Components\Select::make('status')
                                                     ->label('Статус')
                                                     ->options([
@@ -184,7 +207,7 @@ class ServiceOrderResource extends Resource
                                                     ->selectablePlaceholder(false)
                                                     ->suffixIcon('heroicon-o-clipboard-document-check'),
                                             ]),
-                                        
+
                                         Forms\Components\RichEditor::make('problem_description')
                                             ->label('Описание на проблема')
                                             ->required()
@@ -198,7 +221,7 @@ class ServiceOrderResource extends Resource
                                             ]),
                                     ])->columns(2),
                             ]),
-                        
+
                         Forms\Components\Tabs\Tab::make('Детайли на обслужването')
                             ->icon('heroicon-o-wrench')
                             ->schema([
@@ -214,7 +237,7 @@ class ServiceOrderResource extends Resource
                                                 'bulletList',
                                                 'orderedList',
                                             ]),
-                                        
+
                                         Forms\Components\Grid::make(3)
                                             ->schema([
                                                 Forms\Components\TextInput::make('labor_hours')
@@ -224,7 +247,7 @@ class ServiceOrderResource extends Resource
                                                     ->minValue(0)
                                                     ->step(0.5)
                                                     ->suffixIcon('heroicon-o-clock'),
-                                                
+
                                                 Forms\Components\TextInput::make('price')
                                                     ->label('Цена')
                                                     ->numeric()
@@ -235,7 +258,7 @@ class ServiceOrderResource extends Resource
                                                     ->afterStateUpdated(function (Get $get, Set $set) {
                                                         $price = (float) ($get('price') ?? 0);
                                                         $amountPaid = (float) ($get('amount_paid') ?? 0);
-                                                        
+
                                                         // Update payment status based on the updated price
                                                         if ($amountPaid <= 0) {
                                                             $set('payment_status', 'unpaid');
@@ -245,7 +268,7 @@ class ServiceOrderResource extends Resource
                                                             $set('payment_status', 'partially_paid');
                                                         }
                                                     }),
-                                                
+
                                                 Forms\Components\Select::make('assigned_to')
                                                     ->label('Възложено на техник')
                                                     ->relationship('technician', 'name')
@@ -254,7 +277,7 @@ class ServiceOrderResource extends Resource
                                             ]),
                                     ]),
                             ]),
-                        
+
                         Forms\Components\Tabs\Tab::make('Плащане')
                             ->icon('heroicon-o-banknotes')
                             ->schema([
@@ -275,7 +298,7 @@ class ServiceOrderResource extends Resource
                                             ->suffixIcon('heroicon-o-clipboard-document-check')
                                             ->afterStateUpdated(function (Get $get, Set $set, string $state) {
                                                 $price = (float) ($get('price') ?? 0);
-                                                
+
                                                 if ($state === 'paid') {
                                                     $set('amount_paid', $price);
                                                     if (!$get('payment_date')) {
@@ -285,7 +308,7 @@ class ServiceOrderResource extends Resource
                                                     $set('amount_paid', 0);
                                                 }
                                             }),
-                                        
+
                                         Forms\Components\Grid::make(2)
                                             ->schema([
                                                 Forms\Components\TextInput::make('amount_paid')
@@ -298,7 +321,7 @@ class ServiceOrderResource extends Resource
                                                     ->afterStateUpdated(function (Get $get, Set $set, $state) {
                                                         $price = (float) ($get('price') ?? 0);
                                                         $amountPaid = (float) ($state ?? 0);
-                                                        
+
                                                         if ($amountPaid <= 0) {
                                                             $set('payment_status', 'unpaid');
                                                         } elseif ($amountPaid >= $price) {
@@ -306,23 +329,23 @@ class ServiceOrderResource extends Resource
                                                         } else {
                                                             $set('payment_status', 'partially_paid');
                                                         }
-                                                        
+
                                                         if ($amountPaid > 0 && !$get('payment_date')) {
                                                             $set('payment_date', now());
                                                         }
                                                     }),
-                                                
+
                                                 Forms\Components\Placeholder::make('remaining_amount')
                                                     ->label('Остатък за плащане')
                                                     ->content(function (Get $get) {
                                                         $price = (float) ($get('price') ?? 0);
                                                         $amountPaid = (float) ($get('amount_paid') ?? 0);
                                                         $remainingAmount = max(0, $price - $amountPaid);
-                                                        
+
                                                         return number_format($remainingAmount, 2) . ' лв.';
                                                     }),
                                             ]),
-                                        
+
                                         Forms\Components\Grid::make(2)
                                             ->schema([
                                                 Forms\Components\Select::make('payment_method')
@@ -334,17 +357,17 @@ class ServiceOrderResource extends Resource
                                                         'other' => 'Друго',
                                                     ])
                                                     ->visible(fn (Get $get) => $get('payment_status') && $get('payment_status') !== 'unpaid'),
-                                                
+
                                                 Forms\Components\DatePicker::make('payment_date')
                                                     ->label('Дата на плащане')
                                                     ->visible(fn (Get $get) => $get('payment_status') && $get('payment_status') !== 'unpaid'),
                                             ]),
-                                        
+
                                         Forms\Components\Textarea::make('payment_notes')
                                             ->label('Бележки за плащането')
                                             ->rows(3)
                                             ->columnSpanFull(),
-                                        
+
                                         Forms\Components\Actions::make([
                                             Forms\Components\Actions\Action::make('recordFullPayment')
                                                 ->label('Плащане в пълен размер')
@@ -355,9 +378,9 @@ class ServiceOrderResource extends Resource
                                                     $set('amount_paid', $get('price'));
                                                     $set('payment_date', now());
                                                 })
-                                                ->visible(fn (Get $get): bool => 
-                                                    $get('payment_status') !== null && 
-                                                    $get('payment_status') !== 'paid' && 
+                                                ->visible(fn (Get $get): bool =>
+                                                    $get('payment_status') !== null &&
+                                                    $get('payment_status') !== 'paid' &&
                                                     (float) ($get('price') ?? 0) > 0
                                                 ),
                                         ]),
@@ -383,7 +406,7 @@ class ServiceOrderResource extends Resource
                     ->copyable()
                     ->tooltip('Номер на сервизна поръчка')
                     ->weight('bold'),
-                
+
                 Tables\Columns\TextColumn::make('status')
                     ->label('Статус')
                     ->formatStateUsing(fn (string $state): string => match ($state) {
@@ -398,7 +421,7 @@ class ServiceOrderResource extends Resource
                         'pending' => 'heroicon-o-clock',
                         'in_progress' => 'heroicon-o-play',
                         'waiting_payment' => 'heroicon-o-banknotes',
-                        'completed' => 'heroicon-o-check-circle', 
+                        'completed' => 'heroicon-o-check-circle',
                         'cancelled' => 'heroicon-o-x-circle',
                         default => 'heroicon-o-question-mark-circle',
                     })
@@ -411,39 +434,39 @@ class ServiceOrderResource extends Resource
                         'cancelled' => 'danger',
                         default => 'gray',
                     }),
-                
+
                 Tables\Columns\TextColumn::make('customer.name')
                     ->label('Клиент')
                     ->searchable()
                     ->sortable()
                     // ->description(fn ($record) => $record->customer->phone ?? '')
                     ->icon('heroicon-o-user'),
-                
+
                 Tables\Columns\TextColumn::make('scooter.model')
                     ->label('Тротинетка')
                     ->searchable()
                     // ->description(fn ($record) => $record->scooter->serial_number ?? 'Без сериен номер')
                     ->icon('heroicon-o-truck'),
-                
+
                 Tables\Columns\TextColumn::make('received_at')
                     ->label('Получена на')
                     ->date('d.m.Y')
                     ->sortable()
                     ->icon('heroicon-o-calendar'),
-                
+
                 Tables\Columns\TextColumn::make('completed_at')
                     ->label('Завършена на')
                     ->date('d.m.Y')
                     ->sortable()
                     ->toggleable()
                     ->icon('heroicon-o-flag'),
-                    
+
                 Tables\Columns\TextColumn::make('price')
                     ->label('Цена')
                     ->money('BGN')
                     ->sortable()
                     ->icon('heroicon-o-currency-euro'),
-                
+
                 Tables\Columns\TextColumn::make('payment_status')
                     ->label('Плащане')
                     ->formatStateUsing(fn (string $state): string => match ($state) {
@@ -465,7 +488,7 @@ class ServiceOrderResource extends Resource
                         'paid' => 'success',
                         default => 'gray',
                     }),
-                
+
                 Tables\Columns\TextColumn::make('amount_paid')
                     ->label('Платено')
                     ->money('BGN')
@@ -473,12 +496,12 @@ class ServiceOrderResource extends Resource
                     ->toggleable()
                     ->visible(fn ($record) => $record && $record->payment_status !== 'unpaid')
                     ->icon('heroicon-o-banknotes'),
-                
+
                 Tables\Columns\TextColumn::make('technician.name')
                     ->label('Техник')
                     ->toggleable()
                     ->icon('heroicon-o-user-circle'),
-                
+
                 Tables\Columns\TextColumn::make('labor_hours')
                     ->label('Часове')
                     ->numeric(2)
@@ -487,7 +510,7 @@ class ServiceOrderResource extends Resource
                     ->suffix(' ч.')
                     ->alignRight()
                     ->icon('heroicon-o-clock'),
-                
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -504,18 +527,18 @@ class ServiceOrderResource extends Resource
                         'completed' => 'Завършена',
                         'cancelled' => 'Отказана',
                     ]),
-                
+
                     DateRangeFilter::make('received_at')
                     ->label('Период на приемане')
                     ->withIndicator()
                     ->timezone('Europe/Sofia'),
-                    
+
                 Tables\Filters\SelectFilter::make('technician')
                     ->label('Техник')
                     ->relationship('technician', 'name')
                     ->searchable()
                     ->preload(),
-                    
+
                 Tables\Filters\SelectFilter::make('payment_status')
                     ->label('Статус на плащане')
                     ->options([
@@ -523,7 +546,7 @@ class ServiceOrderResource extends Resource
                         'partially_paid' => 'Частично платено',
                         'paid' => 'Платено изцяло',
                     ]),
-                    
+
                 Tables\Filters\SelectFilter::make('payment_method')
                     ->label('Начин на плащане')
                     ->options([
@@ -532,7 +555,7 @@ class ServiceOrderResource extends Resource
                         'bank_transfer' => 'Банков превод',
                         'other' => 'Друго',
                     ]),
-                    
+
                 Tables\Filters\Filter::make('completed_but_unpaid')
                     ->label('Завършени, но неплатени')
                     ->toggle()
@@ -549,23 +572,23 @@ class ServiceOrderResource extends Resource
                     Tables\Actions\ViewAction::make()
                         ->label('Преглед')
                         ->icon('heroicon-o-eye'),
-                    
+
                     Tables\Actions\EditAction::make()
                         ->label('Редактиране')
                         ->icon('heroicon-o-pencil'),
-                    
+
                     Tables\Actions\Action::make('printLabel')
                         ->label('Печат на етикет')
                         ->icon('heroicon-o-printer')
                         ->color('success')
                         ->url(fn (ServiceOrder $record): string => route('service-orders.print-label', $record))
                         ->openUrlInNewTab(),
-                    
+
                     Tables\Actions\Action::make('markWaitingPayment')
                         ->label('Готова - чака плащане')
                         ->icon('heroicon-o-banknotes')
                         ->color('info')
-                        ->visible(fn (ServiceOrder $record): bool => 
+                        ->visible(fn (ServiceOrder $record): bool =>
                             $record->status === 'in_progress'
                         )
                         ->action(function (ServiceOrder $record): void {
@@ -577,13 +600,13 @@ class ServiceOrderResource extends Resource
                         ->modalHeading('Готова за плащане')
                         ->modalDescription('Сигурни ли сте, че искате да маркирате тази поръчка като готова за плащане?')
                         ->modalSubmitActionLabel('Да, чака плащане'),
-                        
+
                     Tables\Actions\Action::make('complete')
                         ->label('Завърши поръчката')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->visible(fn (ServiceOrder $record): bool => 
-                            $record->status === 'waiting_payment' && 
+                        ->visible(fn (ServiceOrder $record): bool =>
+                            $record->status === 'waiting_payment' &&
                             $record->payment_status === 'paid'
                         )
                         ->action(function (ServiceOrder $record): void {
@@ -596,7 +619,7 @@ class ServiceOrderResource extends Resource
                         ->modalHeading('Завърши поръчката')
                         ->modalDescription('Сигурни ли сте, че искате да маркирате тази поръчка като напълно завършена? Клиентът ще получи имейл.')
                         ->modalSubmitActionLabel('Да, завърши поръчката'),
-                    
+
                     Tables\Actions\Action::make('recordPayment')
                         ->label('Запиши плащане')
                         ->icon('heroicon-o-banknotes')
@@ -637,7 +660,7 @@ class ServiceOrderResource extends Resource
                                 referenceNumber: $data['reference_number'] ?? null
                             );
                         }),
-                    
+
                     Tables\Actions\Action::make('cancel')
                         ->label('Отмени поръчката')
                         ->icon('heroicon-o-x-circle')
@@ -665,7 +688,7 @@ class ServiceOrderResource extends Resource
                     Tables\Actions\DeleteBulkAction::make()
                         ->label('Изтриване на избраните')
                         ->icon('heroicon-o-trash'),
-                        
+
                     Tables\Actions\BulkAction::make('printLabels')
                         ->label('Печат на етикети')
                         ->icon('heroicon-o-printer')
@@ -673,14 +696,14 @@ class ServiceOrderResource extends Resource
                         ->action(function (Collection $records): void {
                             // Generate a unique identifier for this batch
                             $batchId = Str::random(10);
-                            
+
                             // Store the record IDs in the session
                             session()->put('print_batch_' . $batchId, $records->pluck('id')->toArray());
-                            
+
                             // Redirect to the bulk print page
                             redirect()->route('service-orders.print-bulk-labels', ['batchId' => $batchId]);
                         }),
-                        
+
                     Tables\Actions\BulkAction::make('markAsWaitingPayment')
                         ->label('Маркирай - чакат плащане')
                         ->icon('heroicon-o-banknotes')
@@ -719,7 +742,7 @@ class ServiceOrderResource extends Resource
                         ->modalDescription('Сигурни ли сте, че искате да маркирате избраните поръчки като завършени? Клиентите ще получат имейли.')
                         ->modalSubmitActionLabel('Да, завърши поръчките')
                         ->deselectRecordsAfterCompletion(),
-                        
+
                     Tables\Actions\BulkAction::make('markAsPaid')
                         ->label('Маркирай като платени')
                         ->icon('heroicon-o-banknotes')
