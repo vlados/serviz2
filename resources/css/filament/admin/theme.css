@@ -12,5 +12,9 @@
         svg {
             @apply text-white;
         }
+        .fi-sidebar-item-label {
+            @apply !text-gray-100;
+        }
+    
     }
 }
